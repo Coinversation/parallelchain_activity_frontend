@@ -1,2 +1,15 @@
-# parallelchain_activity_frontend
-Polkadot Parallel chain auction activity page
+# coinversation
+
+## Node version
+
+v12.22.5
+
+## how to run
+
+```
+npm i
+
+npm run start
+
+npm run build
+```
