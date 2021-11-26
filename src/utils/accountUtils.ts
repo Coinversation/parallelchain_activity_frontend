@@ -1,8 +1,10 @@
 import { PlayerAccount, SessionAccount } from "@/components/types/types";
-import { buildKeyringPair, query } from "@/services/api";
+import { buildKeyringPair, derive, query } from "@/services/api";
+import { u8aToHex, u8aWrapBytes } from "@polkadot/util";
 import { web3Accounts, web3Enable } from "@polkadot/extension-dapp";
 import { mnemonicGenerate } from "@polkadot/util-crypto";
 import { Account } from "../components/types/types";
+
 export const setupExtension = async () => {
   const extensions = await web3Enable("polkadot-js/apps");
   if (extensions.length === 0) {
@@ -39,27 +41,19 @@ export const setupAccounts = async (account: Account | null) => {
     playerAccount = account.player;
     sessionAccount = account.session;
   } else {
-    const accounts = await buildAndGeneratePlayerAndSessionAccounts(
-      injectedAccounts[0].address
-    );
-    playerAccount = accounts.player;
-    sessionAccount = accounts.session;
+    console.log(injectedAccounts);
   }
   return {
     kind: "ok" as const,
-    account: {
-      player: playerAccount,
-      session: sessionAccount,
-    },
     injectedAccounts,
   };
 };
 export const buildAndGeneratePlayerAndSessionAccounts = async (
   playerAddress: string
 ) => {
-  const accountData = await query((q) =>
-    q.transactionPaymentPow.accountData(playerAddress)
-  );
+  const accountData = await query((q) => {
+    return q.transactionPaymentPow.accountData(playerAddress);
+  });
   console.log({ accountData });
   const playerPowCount = 0;
   const playerAccount: PlayerAccount = {
@@ -77,4 +71,22 @@ export const buildAndGeneratePlayerAndSessionAccounts = async (
     player: playerAccount,
     session: sessionAccount,
   };
+};
+
+export const polkadotSignMessage = async (polkadotAddress: string) => {
+  const wrapped = u8aWrapBytes(polkadotAddress.toLowerCase());
+  const injected: any = await web3Enable("clv");
+
+  const currentInjected = injected[0];
+  const ret = await currentInjected.signer.signRaw({
+    data: u8aToHex(wrapped),
+    address: polkadotAddress,
+    type: "bytes",
+  });
+  // const ret = await currentInjected.sign.signMessage({
+  //   data: u8aToHex(wrapped),
+  //   address: polkadotAddress,
+  //   type: "bytes",
+  // });
+  console.log("Polkadot signature:" + JSON.stringify(ret));
 };
