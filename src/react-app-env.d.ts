@@ -71,4 +71,5 @@ declare module "*.less";
 declare module "*.scss";
 declare module "*.png";
 declare module "components/*";
+
 declare module "@/*";
